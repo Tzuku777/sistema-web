@@ -1,6 +1,8 @@
 asgiref==3.11.0
 Django==5.2.8
-psycopg==3.2.13
-psycopg-binary==3.2.13
+psycopg-binary==3.2.13  
+dj-database-url
+gunicorn
+whitenoise
 sqlparse==0.5.3
 tzdata==2025.2
