@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "cambia-esto-en-produccion-local-o-sqlite")
 
 
-DEBUG = True 
+DEBUG = os.getenv("RENDER") is None
 
 
 ALLOWED_HOSTS = ["*"] 
