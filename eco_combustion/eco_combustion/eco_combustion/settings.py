@@ -1,13 +1,21 @@
 import os
+import dj_database_url
 from pathlib import Path
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "cambia-esto-en-produccion")
 
-DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY", "cambia-esto-en-produccion-local-o-sqlite")
 
-ALLOWED_HOSTS = ["*"]  # luego en Render lo ajustas
+
+DEBUG = True 
+
+
+ALLOWED_HOSTS = ["*"] 
+
+
+
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -27,6 +35,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # 3. Middleware para servir archivos estáticos correctamente en Render
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
 ]
 
 ROOT_URLCONF = "eco_combustion.urls"
@@ -50,15 +60,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "eco_combustion.wsgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "EcoCombustion",     
-        "USER": "postgres",          
-        "PASSWORD": "123456",
-        "PORT": "5432",
+
+DATABASES = {}
+
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+else:
+   
+    DATABASES['default'] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
-}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -82,11 +98,13 @@ TIME_ZONE = "America/Santiago"
 USE_I18N = True
 USE_TZ = True
 
+# 4. Configuración de Archivos Estáticos (Static Files)
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
     BASE_DIR / "plataforma" / "static",
 ]
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
