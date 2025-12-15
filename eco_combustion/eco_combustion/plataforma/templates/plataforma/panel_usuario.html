@@ -1,0 +1,30 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Panel de Usuario{% endblock %}
+
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">Panel de usuario</h1>
+  <p class="ec-subtitle">Accesos rápidos y configuración de tu cuenta.</p>
+
+  <section class="ec-card">
+    <div class="ec-card-header">
+      <div>
+        <h2 class="ec-card-title">Tu cuenta</h2>
+        <p class="ec-card-desc">Información básica del perfil.</p>
+      </div>
+      <a class="ec-btn ec-btn-ghost" href="{% url 'plataforma:configuracion_cuenta' %}">Configurar</a>
+    </div>
+
+    <p><strong>Usuario:</strong> {{ request.user.username }}</p>
+    <p><strong>Correo:</strong> {{ request.user.email|default:"No registrado" }}</p>
+  </section>
+
+  <section class="ec-card" style="margin-top:16px;">
+    <h2 class="ec-card-title">Accesos</h2>
+    <div class="ec-list">
+      <a class="ec-item" href="{% url 'plataforma:catalogo' %}">Ver catálogo</a>
+      <a class="ec-item" href="{% url 'plataforma:educativo_lista' %}">Módulo educativo</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

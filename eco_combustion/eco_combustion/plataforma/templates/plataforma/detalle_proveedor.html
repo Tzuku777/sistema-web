@@ -1,0 +1,48 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Proveedor {{ proveedor.nombre_comercial }}{% endblock %}
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">{{ proveedor.nombre_comercial }}</h1>
+
+  <div class="ec-card">
+    <p><strong>Comuna:</strong> {{ proveedor.comuna.nombre|default:"No informado" }}</p>
+    <p><strong>Dirección:</strong> {{ proveedor.direccion_texto|default:"No informado" }}</p>
+    <p><strong>Teléfono:</strong> {{ proveedor.telefono_contacto|default:"No informado" }}</p>
+    <p><strong>Email:</strong> {{ proveedor.email_contacto|default:"No informado" }}</p>
+  </div>
+
+  <h2 class="ec-card-title" style="margin-top:16px;">Productos</h2>
+  <div class="ec-grid">
+    {% for producto in productos %}
+    <div class="ec-card">
+      <h3>{{ producto.get_tipo_producto_display }}</h3>
+
+      {% if producto.especie %}<p><strong>Especie:</strong> {{ producto.especie }}</p>{% endif %}
+      {% if producto.contenido_humedad %}<p><strong>Humedad:</strong> {{ producto.contenido_humedad }}%</p>{% endif %}
+
+      <p><strong>Precio:</strong> ${{ producto.precio_clp }}</p>
+      <p><strong>Formato:</strong> {{ producto.formato }}</p>
+      <p><strong>Medida:</strong> {{ producto.unidad_medida }}</p>
+
+      {% if producto.stock_disponible is not None %}
+        <p><strong>Stock:</strong> {{ producto.stock_disponible }}</p>
+      {% endif %}
+
+      {% if producto.comuna %}
+        <p><strong>Comuna:</strong> {{ producto.comuna.nombre }}</p>
+      {% endif %}
+
+      <p><strong>Certificado SNCL:</strong> {{ producto.certificado_sncl|yesno:"Sí,No" }}</p>
+
+      {% if producto.descripcion %}
+        <p style="margin-top:.5rem; color:#52606d;">
+          {{ producto.descripcion }}
+        </p>
+      {% endif %}
+    </div>
+    {% empty %}
+      <p>Sin productos.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

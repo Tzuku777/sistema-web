@@ -1,0 +1,24 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Administrar educación{% endblock %}
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">Administrar educación</h1>
+  <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:educativo_admin_crear' %}">+ Nuevo contenido</a>
+
+  <div class="ec-list" style="margin-top:16px;">
+    {% for c in contenidos %}
+      <div class="ec-item">
+        <div>
+          <strong>{{ c.titulo }}</strong><br>
+          <small>{{ c.fecha_creacion|date:"d-m-Y" }}</small>
+        </div>
+        <div>
+          <a class="ec-btn ec-btn-ghost" href="{% url 'plataforma:educativo_admin_editar' c.pk %}">Editar</a>
+        </div>
+      </div>
+    {% empty %}
+      <p>No hay contenidos.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

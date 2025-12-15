@@ -1,0 +1,113 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Panel proveedor{% endblock %}
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">Panel comercial</h1>
+  <p class="ec-subtitle">Gestiona tus publicaciones según tu rol aprobado.</p>
+
+  {% if ultima_solicitud %}
+    <div class="ec-alert" style="margin-bottom:16px;">
+      <strong>Rol:</strong> {{ request.user.get_tipo_usuario_display }}
+      <span class="ec-alert-muted">— Estado solicitud:</span>
+      {{ ultima_solicitud.get_estado_display }}
+      {% if ultima_solicitud.comentario_admin %}
+        <div class="ec-divider"></div>
+        <strong>Comentario:</strong> {{ ultima_solicitud.comentario_admin }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="ec-grid">
+
+    {% if request.user.tipo_usuario == 'proveedor' or request.user.tipo_usuario == 'ambos' %}
+    <section class="ec-card">
+      <div class="ec-card-header">
+        <div>
+          <h2 class="ec-card-title">Mis productos</h2>
+          <p class="ec-card-desc">Catálogo de biocombustibles y productos publicados.</p>
+        </div>
+        <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:producto_crear' %}">+ Agregar</a>
+      </div>
+
+      {% if productos %}
+        <div class="ec-list">
+          {% for p in productos %}
+            <div class="ec-item">
+              <div>
+                <strong>{{ p.get_tipo_producto_display }}</strong><br>
+                <small>
+                  {{ p.comuna|default:"Sin comuna" }} • ${{ p.precio_unitario|default:"Sin precio" }}
+                </small>
+              </div>
+
+              <div style="display:flex; gap:.5rem;">
+                <a class="ec-btn ec-btn-ghost" href="{% url 'plataforma:producto_editar' p.id %}">Editar</a>
+                <form method="post"
+                      action="{% url 'plataforma:producto_eliminar' p.id %}"
+                      style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="ec-btn ec-btn-ghost"
+                          onclick="return confirm('¿Eliminar este producto?');">
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="ec-card-desc">No tienes productos publicados.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if request.user.tipo_usuario == 'servicio' or request.user.tipo_usuario == 'ambos' %}
+    <section class="ec-card">
+      <div class="ec-card-header">
+        <div>
+          <h2 class="ec-card-title">Mis servicios</h2>
+          <p class="ec-card-desc">Servicios asociados a calefacción y leña (limpieza, instalación, etc.).</p>
+        </div>
+        <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:servicio_crear' %}">+ Agregar</a>
+      </div>
+
+      {% if servicios %}
+        <div class="ec-list">
+          {% for s in servicios %}
+            <div class="ec-item">
+              <div>
+                <strong>{{ s.nombre }}</strong><br>
+                <small>
+                  {{ s.get_tipo_servicio_display }} • ${{ s.precio_base|default:"Sin precio" }}
+                </small>
+              </div>
+
+              <div style="display:flex; gap:.5rem;">
+                <a class="ec-btn ec-btn-ghost" href="{% url 'plataforma:servicio_editar' s.id %}">Editar</a>
+                <form method="post"
+                      action="{% url 'plataforma:servicio_eliminar' s.id %}"
+                      style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit"
+                          class="ec-btn ec-btn-ghost"
+                          onclick="return confirm('¿Eliminar este servicio?');">
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="ec-card-desc">No tienes servicios publicados.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+  </div>
+</div>
+
+
+
+{% endblock %}

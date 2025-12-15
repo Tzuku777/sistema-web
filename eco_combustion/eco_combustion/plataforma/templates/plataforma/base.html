@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  {% load static %}
+  <title>{% block title %}EcoCombustión{% endblock %}</title>
+
+  <!-- CSS principal -->
+  <link rel="stylesheet" href="{% static 'plataforma/css/styles.css' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="ec-header">
+    <div class="ec-container ec-header-inner">
+      <div class="ec-logo">
+        <a href="{% url 'plataforma:home' %}" aria-label="Ir al inicio">EcoCombustión.cl</a>
+      </div>
+
+      <nav class="ec-nav" aria-label="Navegación principal">
+        <a class="ec-nav-link" href="{% url 'plataforma:catalogo' %}">Catálogo</a>
+        <a class="ec-nav-link" href="{% url 'plataforma:educativo_lista' %}">Educación</a>
+
+        {% if request.user.is_authenticated %}
+          <div class="ec-user-menu">
+            <button class="ec-user-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+              <span class="ec-user-icon" aria-hidden="true">👤</span>
+              <span class="ec-user-name">{{ request.user.username }}</span>
+              <span class="ec-user-caret" aria-hidden="true">▾</span>
+            </button>
+
+            <div class="ec-user-dropdown" role="menu" aria-label="Menú de usuario">
+              <a role="menuitem" href="{% url 'plataforma:panel_usuario' %}">Panel usuario</a>
+              <a role="menuitem" href="{% url 'plataforma:configuracion_cuenta' %}">Configuración</a>
+              {% if request.user.is_staff %}
+                <div class="ec-dropdown-divider" aria-hidden="true"></div>
+                <a role="menuitem" href="{% url 'plataforma:panel_admin' %}">Panel administrador</a>
+              {% endif %}
+              <div class="ec-dropdown-divider" aria-hidden="true"></div>
+              <a role="menuitem" href="{% url 'plataforma:logout' %}">Cerrar sesión</a>
+            </div>
+          </div>
+        {% else %}
+          <a class="ec-nav-link" href="{% url 'plataforma:login' %}">Iniciar sesión</a>
+          <a class="ec-btn ec-btn-primary ec-nav-register" href="{% url 'plataforma:registro' %}">Registrarse</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenido -->
+  <main class="ec-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="ec-footer">
+    <div class="ec-container">
+      <p>© 2025 EcoCombustión.cl — Plataforma para biocombustibles sustentables.</p>
+    </div>
+  </footer>
+
+  <!-- JS (al final para mejor performance) -->
+  <script src="{% static 'plataforma/js/solicitud_rol.js' %}" defer></script>
+
+  <!-- Dropdown (simple y robusto sin librerías) -->
+  <script>
+    (function () {
+      const menu = document.querySelector(".ec-user-menu");
+      if (!menu) return;
+
+      const trigger = menu.querySelector(".ec-user-trigger");
+      const dropdown = menu.querySelector(".ec-user-dropdown");
+
+      function closeMenu() {
+        menu.classList.remove("is-open");
+        trigger?.setAttribute("aria-expanded", "false");
+      }
+      function openMenu() {
+        menu.classList.add("is-open");
+        trigger?.setAttribute("aria-expanded", "true");
+      }
+      function toggleMenu() {
+        menu.classList.contains("is-open") ? closeMenu() : openMenu();
+      }
+
+      trigger?.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      document.addEventListener("click", () => closeMenu());
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+
+      // Evita cierre al hacer click dentro del dropdown
+      dropdown?.addEventListener("click", (e) => e.stopPropagation());
+    })();
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

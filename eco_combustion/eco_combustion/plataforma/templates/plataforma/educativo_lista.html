@@ -1,0 +1,22 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Educación{% endblock %}
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">Educación</h1>
+  <p class="ec-subtitle">Aprende sobre uso responsable de la leña.</p>
+
+  <div class="ec-grid">
+    {% for item in contenidos %}
+      <div class="ec-card">
+        <h3 class="ec-card-title">{{ item.titulo }}</h3>
+        {% if item.resumen %}<p class="ec-card-desc">{{ item.resumen }}</p>{% endif %}
+        <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:educativo_detalle' item.slug %}">
+          Leer contenido
+        </a>
+      </div>
+    {% empty %}
+      <p>No hay contenido educativo disponible.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

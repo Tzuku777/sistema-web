@@ -1,0 +1,17 @@
+{% extends "plataforma/base.html" %}
+{% block title %}{{ contenido.titulo }}{% endblock %}
+{% block content %}
+<div class="ec-container" style="max-width:900px;">
+  <h1 class="ec-title">{{ contenido.titulo }}</h1>
+  {% if contenido.tema %}
+    <p class="ec-subtitle">Tema: {{ contenido.tema }}</p>
+  {% endif %}
+  {% if contenido.resumen %}
+    <div class="ec-alert">{{ contenido.resumen }}</div>
+  {% endif %}
+  <div class="ec-card ec-educativo-texto">
+    {{ contenido.texto|linebreaksbr }}
+  </div>
+  <a class="ec-btn ec-btn-ghost" href="{% url 'plataforma:educativo_lista' %}">← Volver</a>
+</div>
+{% endblock %}

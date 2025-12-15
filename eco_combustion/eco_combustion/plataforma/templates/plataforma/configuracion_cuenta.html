@@ -1,0 +1,356 @@
+{% extends "plataforma/base.html" %}
+{% load static %}
+
+{% block title %}Configuración de cuenta - EcoCombustión{% endblock %}
+
+{% block content %}
+<div class="ec-container">
+  <div class="ec-card" style="padding:22px; margin-top:12px;">
+    <div class="ec-card-header">
+      <div>
+        <h1 class="ec-title" style="margin:0;">Configuración de cuenta</h1>
+        <p class="ec-subtitle" style="margin:6px 0 0;">Administra tu perfil, seguridad y tu rol comercial.</p>
+      </div>
+
+      {# Badge de estado: usa solicitud_actual si existe #}
+      {% with sol=solicitud_actual %}
+        {% if sol %}
+          {% if sol.estado == 'APROBADA' %}
+            <span class="ec-badge ec-badge-ok">Solicitud aprobada</span>
+          {% elif sol.estado == 'PENDIENTE' %}
+            <span class="ec-badge ec-badge-warn">Solicitud pendiente</span>
+          {% else %}
+            <span class="ec-badge ec-badge-danger">Solicitud rechazada</span>
+          {% endif %}
+        {% else %}
+          <span class="ec-badge ec-badge-info">Sin solicitud</span>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <div class="ec-grid" style="margin-top:16px;">
+    <!-- COLUMNA IZQUIERDA -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <!-- PERFIL -->
+      <div class="ec-card">
+        <div class="ec-card-header">
+          <div>
+            <h2 class="ec-card-title">Perfil</h2>
+            <p class="ec-card-desc">Datos básicos de tu cuenta.</p>
+          </div>
+          <button type="button" class="ec-btn ec-btn-ghost" onclick="togglePerfilEdit(true)">
+            Editar
+          </button>
+        </div>
+
+        <div id="perfil-resumen">
+          <div class="ec-list" style="margin-top:0;">
+            <div class="ec-item">
+              <div><strong>Usuario</strong><br><small>{{ request.user.username }}</small></div>
+            </div>
+            <div class="ec-item">
+              <div><strong>Correo</strong><br><small>{{ request.user.email|default:"(sin correo)" }}</small></div>
+            </div>
+            <div class="ec-item">
+              <div>
+                <strong>Nombre</strong><br>
+                <small>
+                  {{ request.user.first_name|default:"(sin nombre)" }}
+                  {{ request.user.last_name|default:"" }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+        <div id="perfil-editar" style="display:none; margin-top:12px;">
+          <div class="ec-divider"></div>
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="ec-form-group">
+              <label for="{{ form_perfil.username.id_for_label }}">Usuario</label>
+              {{ form_perfil.username }}
+              {{ form_perfil.username.errors }}
+            </div>
+
+            <div class="ec-form-group">
+              <label for="{{ form_perfil.email.id_for_label }}">Correo</label>
+              {{ form_perfil.email }}
+              {{ form_perfil.email.errors }}
+            </div>
+
+            <div class="ec-form-group">
+              <label for="{{ form_perfil.first_name.id_for_label }}">Nombre</label>
+              {{ form_perfil.first_name }}
+              {{ form_perfil.first_name.errors }}
+            </div>
+
+            <div class="ec-form-group">
+              <label for="{{ form_perfil.last_name.id_for_label }}">Apellido</label>
+              {{ form_perfil.last_name }}
+              {{ form_perfil.last_name.errors }}
+            </div>
+
+            <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.75rem;">
+              <button type="submit" name="guardar_perfil" class="ec-btn ec-btn-primary">
+                Guardar cambios
+              </button>
+              <button type="button" class="ec-btn ec-btn-ghost" onclick="togglePerfilEdit(false)">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- SOCIOS / SOLICITUD ROL -->
+      <div class="ec-card">
+        <div class="ec-card-header">
+          <div>
+            <h2 class="ec-card-title">Socios</h2>
+            <p class="ec-card-desc">Solicita acceso como proveedor, prestador o ambos.</p>
+          </div>
+
+          {% if solicitud_actual %}
+            {% if solicitud_actual.estado == 'APROBADA' %}
+              <span class="ec-badge ec-badge-ok">Aprobada</span>
+            {% elif solicitud_actual.estado == 'PENDIENTE' %}
+              <span class="ec-badge ec-badge-warn">Pendiente</span>
+            {% else %}
+              <span class="ec-badge ec-badge-danger">Rechazada</span>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        {% if solicitud_actual %}
+          <div class="ec-alert" style="margin-top:8px;">
+            <strong>Estado:</strong> {{ solicitud_actual.get_estado_display|default:solicitud_actual.estado }}
+            <span class="ec-alert-muted">— Tipo:</span> {{ solicitud_actual.get_tipo_solicitud_display|default:solicitud_actual.tipo_solicitud }}
+            {% if solicitud_actual.comentario_admin %}
+              <div class="ec-divider"></div>
+              <strong>Comentario:</strong> {{ solicitud_actual.comentario_admin }}
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="ec-card-desc" style="margin-top:0;">Aún no estás inscrito como socio comercial.</p>
+        {% endif %}
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+          <button type="button" class="ec-btn ec-btn-secondary" onclick="toggleRol()" id="btn-rol">
+            {% if solicitud_actual %}Ver formulario{% else %}¿Quieres inscribirte como socio?{% endif %}
+          </button>
+        </div>
+
+        <div id="rol-comercial" style="display:none; margin-top:14px;">
+          <div class="ec-divider"></div>
+          <h3 style="margin:0 0 .75rem 0; font-weight:800;">Solicitud de rol comercial</h3>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="ec-form-group">
+              <label for="{{ form_solicitud.tipo_solicitud.id_for_label }}">{{ form_solicitud.tipo_solicitud.label }}</label>
+              {{ form_solicitud.tipo_solicitud }}
+              {{ form_solicitud.tipo_solicitud.errors }}
+            </div>
+
+            <div id="bloque-lenia" class="ec-form-bloque" style="display:none;">
+              <h4 style="margin:.5rem 0 1rem; font-weight:800;">Proveedor de biocombustibles</h4>
+
+              <div class="ec-form-group">
+                <label for="{{ form_solicitud.nombre_comercio.id_for_label }}">Nombre del comercio</label>
+                {{ form_solicitud.nombre_comercio }}
+                {{ form_solicitud.nombre_comercio.errors }}
+              </div>
+
+              <div class="ec-form-group">
+                <label for="{{ form_solicitud.giro_comercial.id_for_label }}">Giro comercial</label>
+                {{ form_solicitud.giro_comercial }}
+                {{ form_solicitud.giro_comercial.errors }}
+              </div>
+
+              <div class="ec-form-group">
+                <label for="{{ form_solicitud.direccion_punto_venta.id_for_label }}">Dirección / punto de venta</label>
+                {{ form_solicitud.direccion_punto_venta }}
+                {{ form_solicitud.direccion_punto_venta.errors }}
+              </div>
+
+              <div class="ec-form-check">
+                {{ form_solicitud.acepta_ley_biocombustibles }}
+                <label for="{{ form_solicitud.acepta_ley_biocombustibles.id_for_label }}">
+                  Acepto la Ley de Biocombustibles
+                </label>
+              </div>
+              {{ form_solicitud.acepta_ley_biocombustibles.errors }}
+            </div>
+
+            <div id="bloque-servicios" class="ec-form-bloque" style="display:none;">
+              <h4 style="margin:.5rem 0 1rem; font-weight:800;">Prestador de servicios</h4>
+
+              <div class="ec-form-group">
+                <label for="{{ form_solicitud.ciudad.id_for_label }}">Ciudad</label>
+                {{ form_solicitud.ciudad }}
+                {{ form_solicitud.ciudad.errors }}
+              </div>
+
+              <div class="ec-form-group">
+                <label for="{{ form_solicitud.datos_contacto.id_for_label }}">Datos de contacto</label>
+                {{ form_solicitud.datos_contacto }}
+                {{ form_solicitud.datos_contacto.errors }}
+              </div>
+
+              <div class="ec-form-group">
+                <label for="{{ form_solicitud.tipo_servicios.id_for_label }}">Tipo de servicios</label>
+                {{ form_solicitud.tipo_servicios }}
+                {{ form_solicitud.tipo_servicios.errors }}
+              </div>
+
+              <div class="ec-form-check">
+                {{ form_solicitud.acepta_terminos }}
+                <label for="{{ form_solicitud.acepta_terminos.id_for_label }}">
+                  Acepto los términos y condiciones
+                </label>
+              </div>
+              {{ form_solicitud.acepta_terminos.errors }}
+            </div>
+
+            <button type="submit" name="enviar_solicitud" class="ec-btn ec-btn-primary" style="margin-top:12px;">
+              Guardar y enviar solicitud
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- GESTIÓN COMERCIAL -->
+      {% if puede_productos or puede_servicios %}
+      <div class="ec-card">
+        <div class="ec-card-header">
+          <div>
+            <h2 class="ec-card-title">Gestión comercial</h2>
+            <p class="ec-card-desc">Acceso habilitado según tu rol aprobado.</p>
+          </div>
+          <span class="ec-badge ec-badge-info">{{ request.user.get_tipo_usuario_display }}</span>
+        </div>
+
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          {% if puede_productos %}
+            <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:panel_proveedor' %}">Gestionar productos</a>
+          {% endif %}
+          {% if puede_servicios %}
+            <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:panel_proveedor' %}">Gestionar servicios</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- COLUMNA DERECHA -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <!-- SEGURIDAD -->
+      <div class="ec-card">
+        <div class="ec-card-header">
+          <div>
+            <h2 class="ec-card-title">Seguridad</h2>
+            <p class="ec-card-desc">Administra la contraseña de tu cuenta.</p>
+          </div>
+          <span class="ec-badge ec-badge-info">Cuenta</span>
+        </div>
+
+        <a class="ec-btn ec-btn-secondary" href="{% url 'plataforma:password_change' %}">
+          Cambiar contraseña
+        </a>
+      </div>
+
+      <!-- RESUMEN RÁPIDO -->
+      <div class="ec-card">
+        <div class="ec-card-header">
+          <div>
+            <h2 class="ec-card-title">Resumen</h2>
+            <p class="ec-card-desc">Vista rápida de tu estado actual.</p>
+          </div>
+        </div>
+
+        <div class="ec-list" style="margin-top:0;">
+          <div class="ec-item">
+            <div><strong>Rol</strong><br><small>{{ request.user.get_tipo_usuario_display }}</small></div>
+          </div>
+      {% with sol=solicitud_actual %}
+          <div class="ec-item">
+            <div>
+              <strong>Solicitud</strong><br>
+              <small>
+                {% if sol %}
+                  {{ sol.get_estado_display|default:sol.estado }} — {{ sol.get_tipo_solicitud_display|default:sol.tipo_solicitud }}
+                {% else %}
+                  Sin solicitud registrada
+                {% endif %}
+              </small>
+            </div>
+          </div>
+          {% endwith %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function togglePerfilEdit(mostrar) {
+    const resumen = document.getElementById("perfil-resumen");
+    const editar = document.getElementById("perfil-editar");
+    if (!resumen || !editar) return;
+
+    resumen.style.display = mostrar ? "none" : "block";
+    editar.style.display = mostrar ? "block" : "none";
+  }
+
+  function toggleRol() {
+    const box = document.getElementById("rol-comercial");
+    const btn = document.getElementById("btn-rol");
+    if (!box || !btn) return;
+
+    const abierto = box.style.display === "block";
+    box.style.display = abierto ? "none" : "block";
+    btn.textContent = abierto ? "¿Quieres inscribirte como socio?" : "Ocultar formulario";
+  }
+
+  (function () {
+    const tipoSelect = document.getElementById("id_tipo_solicitud");
+    const bloqueLenia = document.getElementById("bloque-lenia");
+    const bloqueServicios = document.getElementById("bloque-servicios");
+
+    function actualizarBloques() {
+      if (!tipoSelect || !bloqueLenia || !bloqueServicios) return;
+      const val = (tipoSelect.value || "").toUpperCase();
+
+      if (val === "PROVEEDOR") {
+        bloqueLenia.style.display = "block";
+        bloqueServicios.style.display = "none";
+      } else if (val === "PRESTADOR") {
+        bloqueLenia.style.display = "none";
+        bloqueServicios.style.display = "block";
+      } else if (val === "AMBOS") {
+        bloqueLenia.style.display = "block";
+        bloqueServicios.style.display = "block";
+      } else {
+        bloqueLenia.style.display = "none";
+        bloqueServicios.style.display = "none";
+      }
+    }
+
+    if (tipoSelect) {
+      tipoSelect.addEventListener("change", actualizarBloques);
+      actualizarBloques();
+    }
+  })();
+</script>
+{% endblock %}

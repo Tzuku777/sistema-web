@@ -1,0 +1,95 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Catálogo{% endblock %}
+
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">Catálogo</h1>
+  <p class="ec-subtitle">Explora productos y servicios disponibles.</p>
+
+  <div class="ec-tabs">
+    <button class="ec-tab is-active" type="button" data-tab="productos">Productos</button>
+    <button class="ec-tab" type="button" data-tab="servicios">Servicios</button>
+  </div>
+
+  <!-- PRODUCTOS -->
+  <section id="tab-productos" class="ec-tab-panel is-active">
+  {% if productos %}
+    <div class="ec-grid-2">
+      {% for producto in productos %}
+        <div class="ec-card">
+          <h3>{{ producto.get_tipo_producto_display }}</h3>
+
+          <p><strong>Proveedor:</strong> {{ producto.proveedor.nombre_comercial }}</p>
+
+          {% if producto.especie %}
+            <p><strong>Especie:</strong> {{ producto.especie }}</p>
+          {% endif %}
+
+          {% if producto.contenido_humedad %}
+            <p><strong>Humedad:</strong> {{ producto.contenido_humedad }}%</p>
+          {% endif %}
+
+          <p><strong>Precio:</strong> ${{ producto.precio_clp }}</p>
+          <p><strong>Formato:</strong> {{ producto.formato }} ({{ producto.unidad_medida }})</p>
+
+          {% if producto.stock_disponible is not None %}
+            <p><strong>Stock:</strong> {{ producto.stock_disponible }}</p>
+          {% endif %}
+
+          {% if producto.comuna %}
+            <p><strong>Comuna:</strong> {{ producto.comuna.nombre }}</p>
+          {% endif %}
+
+          {% if producto.descripcion %}
+            <p style="margin-top:.5rem; color:#52606d;">
+              {{ producto.descripcion|truncatechars:140 }}
+            </p>
+          {% endif %}
+
+          <a class="ec-button-secundario"
+            href="{% url 'plataforma:detalle_proveedor' producto.proveedor.id %}">
+            Ver proveedor
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No hay productos disponibles por ahora.</p>
+  {% endif %}
+  </section>
+
+  <!-- SERVICIOS -->
+  <section id="tab-servicios" class="ec-tab-panel">
+    {% if servicios %}
+      <div class="ec-grid">
+        {% for s in servicios %}
+          <div class="ec-card">
+            <h3 class="ec-card-title">{{ s.nombre }}</h3>
+            <p class="ec-card-desc">{{ s.proveedor.nombre_comercio }}</p>
+            <p><strong>Tipo:</strong> {{ s.tipo_servicio }}</p>
+            {% if s.descripcion %}<p>{{ s.descripcion }}</p>{% endif %}
+            <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:detalle_proveedor' s.proveedor.id %}">
+              Ver prestador
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No hay servicios publicados.</p>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+(function(){
+  const tabs=document.querySelectorAll('.ec-tab');
+  const panels={productos:document.getElementById('tab-productos'),servicios:document.getElementById('tab-servicios')};
+  tabs.forEach(b=>b.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('is-active'));
+    b.classList.add('is-active');
+    Object.values(panels).forEach(p=>p.classList.remove('is-active'));
+    panels[b.dataset.tab].classList.add('is-active');
+  }));
+})();
+</script>
+{% endblock %}

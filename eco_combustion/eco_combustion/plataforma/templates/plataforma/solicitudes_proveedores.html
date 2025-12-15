@@ -1,0 +1,245 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Solicitudes comerciales{% endblock %}
+
+{% block content %}
+<div class="ec-container">
+  <h1 class="ec-title">Solicitudes comerciales</h1>
+  <p class="ec-subtitle">Revisa, aprueba o rechaza solicitudes de proveedores y prestadores.</p>
+
+  {% if solicitudes %}
+    <div class="ec-card">
+      <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:10px 8px;">Usuario</th>
+            <th style="text-align:left; padding:10px 8px;">Tipo</th>
+            <th style="text-align:left; padding:10px 8px;">Estado</th>
+            <th style="text-align:left; padding:10px 8px;">Fecha envío</th>
+            <th style="text-align:right; padding:10px 8px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in solicitudes %}
+          <tr data-sol-id="{{ s.pk }}" style="border-top:1px solid rgba(0,0,0,.06);">
+            <td style="padding:10px 8px;">{{ s.usuario.username }}</td>
+            <td style="padding:10px 8px;">{{ s.get_tipo_solicitud_display }}</td>
+            <td class="celda-estado" style="padding:10px 8px;">{{ s.get_estado_display }}</td>
+            <td style="padding:10px 8px;">{{ s.fecha_envio }}</td>
+            <td style="padding:10px 8px; text-align:right;">
+              <button type="button"
+                      class="ec-btn ec-btn-secondary js-ver-solicitud"
+                      data-url="{% url 'plataforma:api_solicitud_detalle' s.pk %}"
+                      data-id="{{ s.pk }}">
+                Ver / gestionar
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>No hay solicitudes registradas.</p>
+  {% endif %}
+</div>
+
+<!-- MODAL PARA VER / GESTIONAR SOLICITUD (NO ELIMINAR) -->
+<div id="modal-solicitud" class="ec-modal-overlay" style="display:none;">
+  <div class="ec-modal">
+    <div class="ec-modal-header">
+      <h2>Solicitud comercial</h2>
+      <button type="button" id="modal-cerrar" class="ec-modal-close">&times;</button>
+    </div>
+
+    <div class="ec-modal-body">
+      <p><strong>Usuario:</strong> <span id="sol-usuario"></span></p>
+      <p><strong>Correo:</strong> <span id="sol-email"></span></p>
+      <p><strong>Tipo de solicitud:</strong> <span id="sol-tipo"></span></p>
+      <p><strong>Estado actual:</strong> <span id="sol-estado"></span></p>
+      <p><strong>Fecha envío:</strong> <span id="sol-fecha-envio"></span></p>
+      <p><strong>Fecha resolución:</strong> <span id="sol-fecha-resolucion"></span></p>
+
+      <hr>
+
+      <h3>Datos comerciales</h3>
+      <p><strong>Nombre comercio:</strong> <span id="sol-nombre-comercio"></span></p>
+      <p><strong>Giro comercial:</strong> <span id="sol-giro"></span></p>
+      <p><strong>Dirección punto de venta:</strong> <span id="sol-direccion"></span></p>
+      <p><strong>Ciudad (servicios):</strong> <span id="sol-ciudad"></span></p>
+      <p><strong>Contacto:</strong> <span id="sol-contacto"></span></p>
+      <p><strong>Tipo de servicios:</strong> <span id="sol-tipo-servicios"></span></p>
+
+      <hr>
+
+      <div class="ec-form-group">
+        <label for="sol-comentario-admin">Comentario del administrador (opcional)</label>
+        <textarea id="sol-comentario-admin" rows="3" style="width:100%;"></textarea>
+      </div>
+    </div>
+
+    <div class="ec-modal-footer">
+      <button type="button" id="btn-aprobar" class="ec-btn ec-btn-primary">
+        Aprobar
+      </button>
+      <button type="button" id="btn-rechazar" class="ec-btn ec-btn-ghost">
+        Rechazar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== CSRF TOKEN =====================
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie("csrftoken");
+
+// ===================== ELEMENTOS DEL MODAL =====================
+const modalOverlay = document.getElementById("modal-solicitud");
+const btnCerrar = document.getElementById("modal-cerrar");
+const btnAprobar = document.getElementById("btn-aprobar");
+const btnRechazar = document.getElementById("btn-rechazar");
+const txtComentario = document.getElementById("sol-comentario-admin");
+
+let solicitudActualId = null;
+let solicitudActualUrl = null;
+
+// Campos de texto
+const fieldUsuario = document.getElementById("sol-usuario");
+const fieldEmail = document.getElementById("sol-email");
+const fieldTipo = document.getElementById("sol-tipo");
+const fieldEstado = document.getElementById("sol-estado");
+const fieldFechaEnvio = document.getElementById("sol-fecha-envio");
+const fieldFechaResolucion = document.getElementById("sol-fecha-resolucion");
+const fieldNombreComercio = document.getElementById("sol-nombre-comercio");
+const fieldGiro = document.getElementById("sol-giro");
+const fieldDireccion = document.getElementById("sol-direccion");
+const fieldCiudad = document.getElementById("sol-ciudad");
+const fieldContacto = document.getElementById("sol-contacto");
+const fieldTipoServicios = document.getElementById("sol-tipo-servicios");
+
+// ===================== FUNCIONES MODAL =====================
+function abrirModal() {
+  modalOverlay.style.display = "flex";
+}
+
+function cerrarModal() {
+  modalOverlay.style.display = "none";
+  solicitudActualId = null;
+  solicitudActualUrl = null;
+  txtComentario.value = "";
+}
+
+// Cerrar al hacer click en la X o afuera
+btnCerrar?.addEventListener("click", cerrarModal);
+modalOverlay?.addEventListener("click", function (e) {
+  if (e.target === modalOverlay) cerrarModal();
+});
+
+// ===================== CARGAR DETALLE (GET) =====================
+function cargarSolicitud(url, id) {
+  solicitudActualId = id;
+  solicitudActualUrl = url;
+
+  fetch(url, {
+    method: "GET",
+    headers: { "X-Requested-With": "XMLHttpRequest" }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (!data.ok) {
+      alert(data.mensaje || "No se pudo cargar la solicitud.");
+      return;
+    }
+
+    const s = data.solicitud;
+    fieldUsuario.textContent = s.usuario || "";
+    fieldEmail.textContent = s.email || "";
+    fieldTipo.textContent = s.tipo_solicitud || "";
+    fieldEstado.textContent = s.estado || "";
+    fieldFechaEnvio.textContent = s.fecha_envio || "";
+    fieldFechaResolucion.textContent = s.fecha_resolucion || "-";
+    fieldNombreComercio.textContent = s.nombre_comercio || "-";
+    fieldGiro.textContent = s.giro_comercial || "-";
+    fieldDireccion.textContent = s.direccion_punto_venta || "-";
+    fieldCiudad.textContent = s.ciudad || "-";
+    fieldContacto.textContent = s.datos_contacto || "-";
+    fieldTipoServicios.textContent = s.tipo_servicios || "-";
+    txtComentario.value = s.comentario_admin || "";
+
+    abrirModal();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error al cargar la solicitud.");
+  });
+}
+
+// ===================== APROBAR / RECHAZAR (POST) =====================
+function enviarAccion(accion) {
+  if (!solicitudActualUrl || !solicitudActualId) return;
+
+  const formData = new FormData();
+  formData.append("accion", accion);
+  formData.append("comentario", txtComentario.value || "");
+
+  fetch(solicitudActualUrl, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": csrftoken,
+      "X-Requested-With": "XMLHttpRequest"
+    },
+    body: formData
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (!data.ok) {
+      alert(data.mensaje || "No se pudo procesar la solicitud.");
+      return;
+    }
+
+    // Actualizar estado en la tabla
+    const fila = document.querySelector('tr[data-sol-id="' + solicitudActualId + '"]');
+    if (fila) {
+      const estadoCell = fila.querySelector(".celda-estado");
+      if (estadoCell && data.nuevo_estado) estadoCell.textContent = data.nuevo_estado;
+    }
+
+    alert(data.mensaje || "Acción realizada correctamente.");
+    cerrarModal();
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error al procesar la acción.");
+  });
+}
+
+btnAprobar?.addEventListener("click", () => enviarAccion("aprobar"));
+btnRechazar?.addEventListener("click", () => enviarAccion("rechazar"));
+
+// ===================== EVENTO EN LA TABLA =====================
+document.addEventListener("DOMContentLoaded", function () {
+  const botonesVer = document.querySelectorAll(".js-ver-solicitud");
+  botonesVer.forEach(btn => {
+    btn.addEventListener("click", function () {
+      const url = this.dataset.url;
+      const id = this.dataset.id;
+      if (!url || !id) return;
+      cargarSolicitud(url, id);
+    });
+  });
+});
+</script>
+{% endblock %}

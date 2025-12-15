@@ -1,0 +1,60 @@
+{% extends "plataforma/base.html" %}
+{% load static %}
+{% block title %}Crear cuenta{% endblock %}
+{% block content %}
+<div class="ec-container">
+  <div class="ec-card" style="max-width:900px;margin:0 auto;">
+    <h1 class="ec-title">Crear cuenta</h1>
+    <p class="ec-subtitle">Regístrate y accede a la plataforma.</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <h2 class="ec-card-title">Datos de la cuenta</h2>
+
+      <div class="ec-grid">
+        <div class="ec-form-group">
+          <label>Usuario</label>
+          {{ form_usuario.username }}{{ form_usuario.username.errors }}
+        </div>
+        <div class="ec-form-group">
+          <label>Correo electrónico</label>
+          {{ form_usuario.email }}{{ form_usuario.email.errors }}
+        </div>
+      </div>
+
+      <div class="ec-grid">
+        <div class="ec-form-group">
+          <label>Contraseña</label>
+          {{ form_usuario.password1 }}{{ form_usuario.password1.errors }}
+        </div>
+        <div class="ec-form-group">
+          <label>Repetir contraseña</label>
+          {{ form_usuario.password2 }}{{ form_usuario.password2.errors }}
+        </div>
+      </div>
+
+      <div class="ec-grid">
+        <div class="ec-form-group">
+          <label>RUT</label>
+          {{ form_usuario.rut }}{{ form_usuario.rut.errors }}
+        </div>
+        <div class="ec-form-group">
+          <label>Región</label>
+          {{ form_usuario.region }}{{ form_usuario.region.errors }}
+        </div>
+        <div class="ec-form-group">
+          <label>Comuna</label>
+          {{ form_usuario.comuna }}{{ form_usuario.comuna.errors }}
+        </div>
+      </div>
+
+      <button class="ec-btn ec-btn-primary" type="submit">Crear cuenta</button>
+    </form>
+
+    <p class="ec-card-desc" style="margin-top:12px;">
+      ¿Ya tienes cuenta? <a href="{% url 'plataforma:login' %}">Inicia sesión</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

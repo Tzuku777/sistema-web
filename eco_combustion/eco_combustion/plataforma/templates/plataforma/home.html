@@ -1,0 +1,30 @@
+{% extends "plataforma/base.html" %}
+{% block title %}Inicio - EcoCombustión{% endblock %}
+
+{% block content %}
+<div class="ec-container">
+  <section class="ec-card ec-center">
+    <h1 class="ec-title">EcoCombustión.cl</h1>
+    <p class="ec-subtitle">
+      Conectamos a personas con proveedores responsables de leña y biocombustibles.
+    </p>
+    <a class="ec-btn ec-btn-primary" href="{% url 'plataforma:catalogo' %}">Explorar catálogo</a>
+  </section>
+
+  <section class="ec-grid" style="margin-top:24px;">
+    <div class="ec-card">
+      <h2 class="ec-card-title">Misión</h2>
+      <p>
+        Promover el uso responsable de biocombustibles en el sur de Chile mediante información clara
+        y proveedores formales.
+      </p>
+    </div>
+    <div class="ec-card">
+      <h2 class="ec-card-title">Visión</h2>
+      <p>
+        Ser la plataforma de referencia en compra informada de biocombustibles sustentables.
+      </p>
+    </div>
+  </section>
+</div>
+{% endblock %}
