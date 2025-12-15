@@ -12,10 +12,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "cambia-esto-en-produccion-local-o-sqlite")
 DEBUG = os.getenv("RENDER") is None
 
 
-ALLOWED_HOSTS = ["*"] 
-
-
-
+ALLOWED_HOSTS = ['sistema-web.onrender.com', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     "django.contrib.admin",
